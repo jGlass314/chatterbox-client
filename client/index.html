@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <title>chatterbox</title>
     <link rel="stylesheet" href="styles/styles.css">
-
+    <link href="https://fonts.googleapis.com/css?family=News+Cycle" rel="stylesheet">
     <!-- dependencies -->
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/underscore/underscore.js"></script>
+    
     <script>
       // YOU DO NOT NEED TO EDIT THIS CODE
       if (!/(&|\?)username=/.test(window.location.search)) {
@@ -25,8 +26,16 @@
   <body>
     <div id="main">
       <h1>chatterbox</h1>
+      <h3 class="subHeader">Select a Chat Room</h3>
+      <select class="roomSelector">
+      <option value="" disabled selected>Select a Chatroom</option>
+      </select>
+      <div class ="newMessage"><form>
+      </div>
       <!-- Your HTML goes here! -->
+      <div class="message"><input class="textBox" type="text" name="enter" placeholder="New Message"></form></div>
     </div>
+    
     <div id="chats"></div>
     <script src="scripts/app.js"></script>
   </body>
