@@ -8,7 +8,7 @@ app.renderChats = function(data, $root, refreshRate, messageLimit) {
   var rooms = {};
   tmpArray.forEach((message) => {
     var roomname = app.filterMessage(message.roomname);
-    if(rooms[roomname] === undefined) {
+    if (rooms[roomname] === undefined) {
       rooms[roomname] = [];
     }
     rooms[roomname].push(message);
@@ -25,10 +25,13 @@ app.renderChats = function(data, $root, refreshRate, messageLimit) {
   if (messageArray.length === 0 ||
     tmpArray[0].createdAt > messageArray[0].createdAt) {
     // refresh message set
-    messageArray = [];
-    for (var i = 0; i < tmpArray.length; i++) {
-      messageArray.push(tmpArray[i]);
-    }
+    messageArray = tmpArray.slice();
+    // messageArray = [];
+    // for (var i = 0; i < tmpArray.length; i++) {
+    //   messageArray.push(tmpArray[i]);
+    // }
+
+
     // clear DOM
     app.clearMessages();
     // add new message set
@@ -39,37 +42,30 @@ app.renderChats = function(data, $root, refreshRate, messageLimit) {
 };
 
 app.filterMessage = function(html) {
-  // rules:
-  // Convert & to &amp;
-  // Convert < to &lt;
-  // Convert > to &gt;
-  // Convert " to &quot;
-  // Convert ' to &#x27;
-  // Convert / to &#x2F;
   var responseString = '';
   for (let index in html) {
     switch (html[index]) {
     case '&':
-      responseString = html.slice(0, index).concat('&amp;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&amp;').concat(html.slice(index + 1));
       break;
     case '<':
-      responseString = html.slice(0, index).concat('&lt;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&lt;').concat(html.slice(index + 1));
       break;
     case '>':
-      responseString = html.slice(0, index).concat('&gt;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&gt;').concat(html.slice(index + 1));
       break;
     case '"':
-      responseString = html.slice(0, index).concat('&quot;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&quot;').concat(html.slice(index + 1));
       break;
     case '\'':
-      responseString = html.slice(0, index).concat('&#x27;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&#x27;').concat(html.slice(index + 1));
       break;
     case '/':
-      responseString = html.slice(0, index).concat('&#x2F;').concat(html.slice(index + 1));
+      html = html.slice(0, index).concat('&#x2F;').concat(html.slice(index + 1));
       break;
     }
   }
-  return responseString || html;
+  return html;
 };
 
 app.init = function(url, refreshRate, messageLimit) {
@@ -79,10 +75,27 @@ app.init = function(url, refreshRate, messageLimit) {
   setInterval(function() {
     app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit);
   }, refreshRate);
+  
+  $("#messageSubmit").submit(function(event) {
+
+        /* stop form from submitting normally */
+    event.preventDefault();
+
+    /* get the action attribute from the <form action=""> element */
+    var $form = $( this );
+    alert($form.attr( 'enter' ));
+
+    });
 };
 
-app.send = function(message) {
-  //POST request
+app.send = function(url, message) {
+  var message = {
+    username: 'shawndrost',
+    text: message,
+    roomname: '4chan'
+  };
+  var messageString = JSON.stringify(message);
+  $.post(url, { "data" : messageString});
 };
 
 app.fetch = function(url, renderFunction, ...args) {

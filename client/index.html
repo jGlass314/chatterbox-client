@@ -28,12 +28,14 @@
       <h1>chatterbox</h1>
       <h3 class="subHeader">Select a Chat Room</h3>
       <select class="roomSelector">
-      <option value="" disabled selected>Select a Chatroom</option>
+        <option value="" disabled selected>Select a Chatroom</option>
       </select>
-      <div class ="newMessage"><form>
-      </div>
+      <form id="messageSubmit">
       <!-- Your HTML goes here! -->
-      <div class="message"><input class="textBox" type="text" name="enter" placeholder="New Message"></form></div>
+        <div class="message">
+          <input class="textBox" type="text" name="enter" placeholder="New Message">
+        </div>
+      </form>
     </div>
     
     <div id="chats"></div>
