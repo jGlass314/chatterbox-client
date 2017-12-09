@@ -2,9 +2,9 @@
 const app = {};
 var messageArray = [];
 
-app.renderChats = function(data, $root, refreshRate, messageLimit) {
+app.renderChats = function(data, $root, refreshRate, messageLimit, roomName) {
   var tmpArray = data.results;
-  console.log(messageArray); 
+  // console.log(messageArray); 
   var rooms = {};
   tmpArray.forEach((message) => {
     var roomname = app.filterMessage(message.roomname);
@@ -13,26 +13,27 @@ app.renderChats = function(data, $root, refreshRate, messageLimit) {
     }
     rooms[roomname].push(message);
   });
-  var roomNames = Object.keys(rooms);
-  var $roomSelector = $('.roomSelector');
   
-  //MAYBE WE DONT NEED DYNAMIC REFRESH HERE//
-  $roomSelector.children().remove();
-  roomNames.forEach((room) => {
-    $roomSelector.append(`<option value=${room}>${room}</option>`);
-  });
+  if (!roomName) {
+    var roomNames = Object.keys(rooms);
+    var $roomSelector = $('.roomSelector');
+    
+    //MAYBE WE DONT NEED DYNAMIC REFRESH HERE//
+    $roomSelector.children().remove();
+    roomNames.forEach((room) => {
+      $roomSelector.append('<option value=\"' + room + '\">' + room + '</option>');
+    }); 
+  }
 
   if (messageArray.length === 0 ||
-    tmpArray[0].createdAt > messageArray[0].createdAt) {
+    tmpArray[0].createdAt > messageArray[0].createdAt ||
+    roomName !== undefined) {
     // refresh message set
-    messageArray = tmpArray.slice();
-    // messageArray = [];
-    // for (var i = 0; i < tmpArray.length; i++) {
-    //   messageArray.push(tmpArray[i]);
-    // }
-
-
-    // clear DOM
+    if (roomName === undefined) {
+      messageArray = tmpArray.slice();
+    } else {
+      messageArray = rooms[roomName];
+    }
     app.clearMessages();
     // add new message set
     for (var i = 0; i < messageArray.length; i++) {
@@ -46,61 +47,107 @@ app.filterMessage = function(html) {
   for (let index in html) {
     switch (html[index]) {
     case '&':
-      html = html.slice(0, index).concat('&amp;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&amp;').concat(html.slice(index + 1));
       break;
     case '<':
-      html = html.slice(0, index).concat('&lt;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&lt;').concat(html.slice(index + 1));
       break;
     case '>':
-      html = html.slice(0, index).concat('&gt;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&gt;').concat(html.slice(index + 1));
       break;
     case '"':
-      html = html.slice(0, index).concat('&quot;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&quot;').concat(html.slice(index + 1));
       break;
     case '\'':
-      html = html.slice(0, index).concat('&#x27;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&#x27;').concat(html.slice(index + 1));
       break;
     case '/':
-      html = html.slice(0, index).concat('&#x2F;').concat(html.slice(index + 1));
+      responseString = responseString.concat('&#x2F;').concat(html.slice(index + 1));
+      break;
+    default:
+      responseString = responseString.concat(html[index]);
       break;
     }
   }
-  return html;
+  return responseString;
+};
+
+app.getUrlVars = function() {
+  var vars = [], hash;
+  var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+  for (var i = 0; i < hashes.length; i++) {
+    hash = hashes[i].split('=');
+    vars.push(hash[0]);
+    vars[hash[0]] = hash[1];
+  }
+  return vars;
 };
 
 app.init = function(url, refreshRate, messageLimit) {
   const $root = $('#chats');
   app.URL = url;
   app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit);
-  setInterval(function() {
-    app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit);
-  }, refreshRate);
+  // setInterval(function() {
+  //   app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit);
+  // }, refreshRate);
   
-  $("#messageSubmit").submit(function(event) {
-
-        /* stop form from submitting normally */
+  $(document).ajaxStop(function() {
+    console.log(setTimeout(function() {
+      app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit);
+    }, refreshRate));
+  });
+  
+  $('.roomSelector').on('change', function(event) {
     event.preventDefault();
+    app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit, $('.roomSelector').val());
+    console.log('roomSelector.val:',$('.roomSelector').val());
+  });
+  
+  $('#messageSubmit').on('submit', function(event){
+    event.preventDefault();
+    app.send(url);
+    $('.textBox').val('');
+    $('.roomBox').val('');
+    
+  });
 
-    /* get the action attribute from the <form action=""> element */
-    var $form = $( this );
-    alert($form.attr( 'enter' ));
-
-    });
 };
 
-app.send = function(url, message) {
+app.send = function(url) {
+  var $messageNode = $('.textBox');
+  var $roomNode = $('.roomBox');
+  var urlVars = app.getUrlVars();
+  console.log(this);
   var message = {
-    username: 'shawndrost',
-    text: message,
-    roomname: '4chan'
+    username: urlVars['username'],
+    text: $messageNode.val(),
+    roomname: $roomNode.val()
+    
   };
   var messageString = JSON.stringify(message);
-  $.post(url, { "data" : messageString});
+  // debugger;
+ // alert($node.val());
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data : messageString,
+    contentType: 'application/json',
+    success: function(){
+      console.log('message submitted.');
+    }
+  });
+  
 };
 
 app.fetch = function(url, renderFunction, ...args) {
-  $.get(url, { "order": "-createdAt" }, function (data) {
-    renderFunction(data, ...args);
+  var roomName = args[3];
+  var data = { "order": "-createdAt" };
+  if(roomName !== undefined) {
+    data['where'] = JSON.stringify({'roomname' : roomName});
+  }
+  console.log(data);
+  $.get(url, data, function (messageData) {
+    renderFunction(messageData, ...args);
   });
 };
 
@@ -108,7 +155,7 @@ app.clearMessages = function() {
   $('#chats').children().remove();
 };
 
-app.renderMessage = function(message, $node) {
+app.renderMessage = function(message, $node, roomName) {
   
   var createdAt = app.filterMessage(message.createdAt);
   var roomName = app.filterMessage(message.roomname);
@@ -129,7 +176,7 @@ app.clearRoom = function() {
 };
 
 const URL = 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages';
-const REFRESH_RATE = 3000;
+const REFRESH_RATE = 4000;
 const MESSAGE_LIMIT = 20;
 app.init(URL, REFRESH_RATE, MESSAGE_LIMIT);
 

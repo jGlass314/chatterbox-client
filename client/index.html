@@ -33,7 +33,9 @@
       <form id="messageSubmit">
       <!-- Your HTML goes here! -->
         <div class="message">
-          <input class="textBox" type="text" name="enter" placeholder="New Message">
+          <input class="textBox" type="text" name="enter" placeholder="New Message" onsubmit="return false">
+          <input class="roomBox" type="text" name="enter" placeholder="Room Name" onsubmit="return false">
+          <input type="submit" value = "send" name="submit" method="app.send">
         </div>
       </form>
     </div>
