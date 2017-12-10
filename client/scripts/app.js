@@ -4,6 +4,7 @@ var messageArray = [];
 
 app.renderChats = function(data, $root, refreshRate, messageLimit, roomName) {
   var tmpArray = data.results;
+  roomName = roomName ? roomName : app.currentRoom;
   // console.log(messageArray); 
   var rooms = {};
   tmpArray.forEach((message) => {
@@ -15,15 +16,15 @@ app.renderChats = function(data, $root, refreshRate, messageLimit, roomName) {
   });
   
   if (!roomName) {
-    var roomNames = Object.keys(rooms);
+    var roomNames = Object.keys(rooms).sort();
     var $roomSelector = $('.roomSelector');
     
     $roomSelector.children().remove();
     roomNames.forEach((room) => {
       $roomSelector.append('<option value=\"' + room + '\">' + room + '</option>');
     }); 
-  } 
-
+  }
+// debugger;
   if (messageArray.length === 0 ||
     tmpArray[0].createdAt > messageArray[0].createdAt ||
     roomName !== undefined) {
@@ -51,6 +52,14 @@ app.addFriend = function() {
 
 app.filterMessage = function(html) {
   var responseString = '';
+  // console.log(html);
+  // html.replace('/', '&#x2F;')
+  //   .replace('\'', '&#x27;')
+  //   .replace('"', '&quot;')
+  //   .replace('>', '&gt;')
+  //   .replace('<', '&lt;')
+  //   .replace('&', '&amp;');
+  
   for (let index in html) {
     switch (html[index]) {
     case '&':
@@ -76,6 +85,7 @@ app.filterMessage = function(html) {
       break;
     }
   }
+  // console.log(responseString);
   return responseString;
 };
 
@@ -115,7 +125,11 @@ app.init = function(url, refreshRate, messageLimit) {
   
   $('.roomSelector').on('change', function(event) {
     event.preventDefault();
-    app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit, $('.roomSelector').val());
+    app.currentRoom = $('.roomSelector').val();
+    if(app.currentRoom === ' ') {
+      app.currentRoom = undefined;
+    }
+    app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit, app.currentRoom);
     console.log('roomSelector.val:', $('.roomSelector').val());
   });
   
@@ -162,6 +176,7 @@ app.fetch = function(url, renderFunction, ...args) {
   var roomName = args[3];
   var data = { "order": "-createdAt" };
   if (roomName !== undefined) {
+    console.log('getting room:',roomName);
     data['where'] = JSON.stringify({'roomname': roomName});
   }
   console.log(data);
@@ -185,9 +200,10 @@ app.renderMessage = function(message, $node, roomName) {
   var createdAt = app.filterMessage(message.createdAt);
   
   $node.append(`<div class="message" id="${createdAt}">
-  <div class="friendLink">User: ${username}</div>
-  <div class="${username}">${text}</div>
-  <div class="friendIcon"><img src="../images/friend.png"></div>
+  <div class="friendLink userText">User: ${username}</div>
+  <div class="${username} messageText">${text}</div>
+  <div>${createdAt}</div>
+  <span class="friendIcon"><img src="./images/friend.png"></span>
   </div>`);
 };
 

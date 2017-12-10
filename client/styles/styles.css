@@ -99,11 +99,22 @@ form input[type=text] {
 .message {
     background-color: #f1f1f1;
     margin: 10px;
+    padding: 10px 0px;
     word-break:break-all;
+}
+
+.userText {
+  font-family: 'Permanent Marker', cursive;
+}
+
+.messageText {
+  font-family: 'Lato', sans-serif;
 }
 
 .friendIcon {
   float: right;
+  display: none;
+  text-align: right;
 }
 
 select {
