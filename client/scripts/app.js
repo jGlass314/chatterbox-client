@@ -18,12 +18,11 @@ app.renderChats = function(data, $root, refreshRate, messageLimit, roomName) {
     var roomNames = Object.keys(rooms);
     var $roomSelector = $('.roomSelector');
     
-    //MAYBE WE DONT NEED DYNAMIC REFRESH HERE//
     $roomSelector.children().remove();
     roomNames.forEach((room) => {
       $roomSelector.append('<option value=\"' + room + '\">' + room + '</option>');
     }); 
-  }
+  } 
 
   if (messageArray.length === 0 ||
     tmpArray[0].createdAt > messageArray[0].createdAt ||
@@ -40,6 +39,14 @@ app.renderChats = function(data, $root, refreshRate, messageLimit, roomName) {
       app.renderMessage(messageArray[i], $root);
     }
   }
+};
+
+app.renderRoom = function(roomName) {
+  
+};
+
+app.addFriend = function() {
+  
 };
 
 app.filterMessage = function(html) {
@@ -97,15 +104,35 @@ app.init = function(url, refreshRate, messageLimit) {
     }, refreshRate));
   });
   
+  $('body').on('click', '.friendLink', function(event) {
+    if(app.currentFriend) {
+      $(`.${app.currentFriend}`).css('font-weight', 'normal');
+    }
+    
+    app.currentFriend = $(this).text().split(': ')[1];
+    $(`.${app.currentFriend}`).css('font-weight', 'bold');
+  });
+  
   $('.roomSelector').on('change', function(event) {
     event.preventDefault();
     app.fetch(app.URL, app.renderChats, $root, refreshRate, messageLimit, $('.roomSelector').val());
-    console.log('roomSelector.val:',$('.roomSelector').val());
+    console.log('roomSelector.val:', $('.roomSelector').val());
   });
   
-  $('#messageSubmit').on('submit', function(event){
+  $('#messageSubmit').on('submit', function(event) {
     event.preventDefault();
-    app.send(url);
+    
+    var $messageNode = $('.textBox');
+    var $roomNode = $('.roomBox');
+    var urlVars = app.getUrlVars();
+    console.log(this);
+    var message = {
+      username: urlVars['username'],
+      text: $messageNode.val(),
+      roomname: $roomNode.val()
+    };
+    
+    app.send(message);
     $('.textBox').val('');
     $('.roomBox').val('');
     
@@ -113,27 +140,19 @@ app.init = function(url, refreshRate, messageLimit) {
 
 };
 
-app.send = function(url) {
-  var $messageNode = $('.textBox');
-  var $roomNode = $('.roomBox');
-  var urlVars = app.getUrlVars();
-  console.log(this);
-  var message = {
-    username: urlVars['username'],
-    text: $messageNode.val(),
-    roomname: $roomNode.val()
-    
-  };
-  var messageString = JSON.stringify(message);
+app.send = function(message) {
+  console.log('message :',message);
   // debugger;
  // alert($node.val());
   $.ajax({
-    url: url,
+    url: app.URL,
     type: 'POST',
-    data : messageString,
-    contentType: 'application/json',
+    data : message,
     success: function(){
       console.log('message submitted.');
+    },
+    fail: function(e) {
+      console.log('message send failure:',e);
     }
   });
   
@@ -142,8 +161,8 @@ app.send = function(url) {
 app.fetch = function(url, renderFunction, ...args) {
   var roomName = args[3];
   var data = { "order": "-createdAt" };
-  if(roomName !== undefined) {
-    data['where'] = JSON.stringify({'roomname' : roomName});
+  if (roomName !== undefined) {
+    data['where'] = JSON.stringify({'roomname': roomName});
   }
   console.log(data);
   $.get(url, data, function (messageData) {
@@ -157,17 +176,18 @@ app.clearMessages = function() {
 
 app.renderMessage = function(message, $node, roomName) {
   
+  $node = $node || $('#chats');
+  
   var createdAt = app.filterMessage(message.createdAt);
   var roomName = app.filterMessage(message.roomname);
   var text = app.filterMessage(message.text);
-  var username = app.filterMessage(message.username);
+  var username = app.filterMessage(message.username).replace('%20',' ');
   var createdAt = app.filterMessage(message.createdAt);
   
   $node.append(`<div class="message" id="${createdAt}">
-  <div>roomname: ${roomName} </div>
-  <div>text: ${text}</div>
-  <div>user: ${username}</div>
-  <div>date: ${createdAt}</div>
+  <div class="friendLink">User: ${username}</div>
+  <div class="${username}">${text}</div>
+  <div class="friendIcon"><img src="../images/friend.png"></div>
   </div>`);
 };
 

@@ -102,6 +102,10 @@ form input[type=text] {
     word-break:break-all;
 }
 
+.friendIcon {
+  float: right;
+}
+
 select {
    -webkit-appearance: button;
    -webkit-border-radius: 2px;
