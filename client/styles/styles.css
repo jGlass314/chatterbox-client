@@ -96,19 +96,51 @@ form input[type=text] {
     background-color: #0090da;
 }
 
+.submitButton {
+  border-radius: 4px;
+  background-color: #f4511e;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 20px;
+  margin: 5px;
+  margin-top: 20px;
+  width: 100px;
+  transition: all 0.5s;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.submitButton:hover {
+  opacity: .7;
+  background-color: #f4515e: 
+}
+
 .message {
     background-color: #f1f1f1;
     margin: 10px;
-    padding: 10px 0px;
+    padding: 10px 40px 10px 20px;
     word-break:break-all;
+    box-shadow: 3px 3px 3px lightgrey;
+}
+
+.first {
+  transition: box-shadow 300ms ease-in-out, color 300ms ease-in-out;
+  &:hover {
+    box-shadow: 0 0 40px 40px $red inset;
+  }
 }
 
 .userText {
   font-family: 'Permanent Marker', cursive;
+  cursor: pointer;
+  text-align: right;
 }
 
 .messageText {
   font-family: 'Lato', sans-serif;
+  cursor: pointer;
 }
 
 .friendIcon {
